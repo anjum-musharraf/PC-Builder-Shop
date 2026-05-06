@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechForge – PC Builder Shop</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#e0f7fa', 100: '#b2ebf2', 200: '#80deea', 300: '#4dd0e1', 400: '#26c6da', 500: '#00bcd4', 600: '#00acc1', 700: '#0097a7', 800: '#00838f', 900: '#006064' },
+                        dark: { 50: '#f0f0f0', 100: '#e0e0e0', 200: '#b0b0b0', 300: '#808080', 400: '#505050', 500: '#303030', 600: '#2a2a2a', 700: '#1e1e1e', 800: '#161616', 900: '#0d0d0d' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] },
+                    animation: { 'fade-in': 'fadeIn 0.3s ease-out' },
+                    keyframes: { fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } } }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        .dark ::-webkit-scrollbar-thumb { background: #404040; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #c0c0c0; border-radius: 4px; }
+        .product-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .product-card:hover { transform: translateY(-6px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
+        .category-pill.active { background: #00bcd4; color: white; border-color: #00bcd4; }
+        .saved-build-card { transition: all 0.3s ease; }
+        .saved-build-card:hover { transform: scale(1.02); }
+        .cart-sidebar { transition: transform 0.3s ease; }
+        .toast { transition: opacity 0.3s; }
+    </style>
+</head>
+<body class="dark:bg-dark-900 dark:text-gray-100 bg-gray-50 text-gray-900 font-sans">
+
+    <!-- Navigation Bar -->
+    <nav class="fixed top-0 left-0 right-0 z-50 dark:bg-dark-900/90 bg-white/90 backdrop-blur-lg border-b dark:border-dark-600 border-gray-200">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-3">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-microchip text-2xl text-brand-500"></i>
+                    <span class="font-bold text-xl tracking-tight">TechForge</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <button id="nav-products" class="nav-link text-gray-700 dark:text-gray-200 hover:text-brand-500 transition">Products</button>
+                    <button id="nav-builder" class="nav-link text-gray-700 dark:text-gray-200 hover:text-brand-500 transition">PC Builder</button>
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-dark-700">
+                        <i class="fas fa-moon dark:hidden text-gray-600"></i>
+                        <i class="fas fa-sun hidden dark:inline-block text-yellow-400"></i>
+                    </button>
+                    <a href="/logout" class="text-red-500 hover:text-red-400"><i class="fas fa-sign-out-alt mr-1"></i>Logout</a>
+                </div>
+                <div class="flex items-center space-x-4 md:hidden">
+                    <button id="cart-icon-mobile" class="relative">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                        <span id="cartBadgeMobile" class="absolute -top-2 -right-3 bg-red-500 text-white text-xs rounded-full px-1.5">0</span>
+                    </button>
+                    <button id="mobile-menu-btn" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-dark-700">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="md:hidden hidden pb-4 flex flex-col space-y-3">
+                <button id="mobile-nav-products" class="text-left px-2 py-1">Products</button>
+                <button id="mobile-nav-builder" class="text-left px-2 py-1">PC Builder</button>
+                <button id="mobile-theme-toggle" class="text-left px-2 py-1">Toggle Dark/Light</button>
+                <a href="/logout" class="px-2 py-1 text-red-500">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-20 pb-12">
+        <!-- Products Section -->
+        <section id="products-section" class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="hero-gradient rounded-2xl p-6 mb-8 text-center bg-gradient-to-r from-cyan-900 to-blue-900 dark:from-gray-800 dark:to-gray-900">
+                <h1 class="text-3xl md:text-4xl font-bold mb-2 text-white">Build Your Dream PC</h1>
+                <p class="text-gray-200">High-performance components, curated for enthusiasts</p>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
+                <div class="relative w-full sm:w-96">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="search-input" placeholder="Search products..." class="w-full pl-10 pr-4 py-2 border dark:border-dark-600 rounded-lg bg-white dark:bg-dark-800 focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div class="flex gap-2 flex-wrap" id="category-filters">
+                    <button data-category="all" class="category-pill px-4 py-1 rounded-full border dark:border-dark-600 hover:bg-brand-500 hover:text-white transition active">All</button>
+                    <button data-category="CPU" class="category-pill px-4 py-1 rounded-full border dark:border-dark-600 hover:bg-brand-500 hover:text-white transition">CPU</button>
+                    <button data-category="Motherboard" class="category-pill px-4 py-1 rounded-full border dark:border-dark-600 hover:bg-brand-500 hover:text-white transition">Motherboard</button>
+                    <button data-category="GPU" class="category-pill px-4 py-1 rounded-full border dark:border-dark-600 hover:bg-brand-500 hover:text-white transition">GPU</button>
+                    <button data-category="RAM" class="category-pill px-4 py-1 rounded-full border dark:border-dark-600 hover:bg-brand-500 hover:text-white transition">RAM</button>
+                    <button data-category="Storage" class="category-pill px-4 py-1 rounded-full border dark:border-dark-600 hover:bg-brand-500 hover:text-white transition">Storage</button>
+                </div>
+            </div>
+            <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+        </section>
+
+        <!-- PC Builder Section (hidden initially) -->
+        <section id="builder-section" class="hidden container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <div class="bg-white dark:bg-dark-800 rounded-xl shadow-lg p-6">
+                        <h2 class="text-2xl font-bold mb-4 flex items-center"><i class="fas fa-tools text-brand-500 mr-2"></i>PC Builder</h2>
+                        <form id="builder-form">
+                            <div class="mb-4">
+                                <label class="block font-medium mb-1">Build Name</label>
+                                <input type="text" id="build-name" class="w-full px-3 py-2 border dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 focus:ring-2 focus:ring-brand-500" placeholder="My Epic Build">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label>CPU</label><select id="cpu-select" class="builder-select w-full px-3 py-2 border dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700"></select></div>
+                                <div><label>Motherboard</label><select id="mobo-select" class="builder-select w-full px-3 py-2 border dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700"></select></div>
+                                <div><label>GPU</label><select id="gpu-select" class="builder-select w-full px-3 py-2 border dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700"></select></div>
+                                <div><label>RAM</label><select id="ram-select" class="builder-select w-full px-3 py-2 border dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700"></select></div>
+                                <div><label>Storage</label><select id="storage-select" class="builder-select w-full px-3 py-2 border dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700"></select></div>
+                            </div>
+                            <div id="compat-message" class="mt-4 text-sm"></div>
+                            <button type="submit" class="mt-6 w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2 rounded-lg transition">Save Build</button>
+                        </form>
+                    </div>
+                </div>
+                <div>
+                    <div class="bg-white dark:bg-dark-800 rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold mb-3 flex items-center"><i class="fas fa-save text-green-500 mr-2"></i>My Saved Builds</h3>
+                        <div id="saved-builds-list" class="space-y-3 max-h-96 overflow-y-auto">
+                            <p class="text-gray-400 text-center py-4">No builds saved yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Cart Sidebar -->
+    <div id="cart-overlay" class="overlay fixed inset-0 bg-black/50 z-50 hidden"></div>
+    <div id="cart-sidebar" class="fixed top-0 right-0 w-full sm:w-96 h-full bg-white dark:bg-dark-800 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="flex justify-between items-center p-4 border-b dark:border-dark-700">
+            <h3 class="text-xl font-bold"><i class="fas fa-shopping-cart mr-2"></i>Your Cart</h3>
+            <button id="close-cart" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-dark-700"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-3">
+            <p class="text-center text-gray-400">Cart is empty</p>
+        </div>
+        <div class="border-t dark:border-dark-700 p-4">
+            <div class="flex justify-between mb-3"><span class="font-semibold">Total:</span><span id="cart-total" class="font-bold text-brand-500">BDT 0</span></div>
+            <button id="checkout-btn" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition">Checkout</button>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+    <script>
+        // -------------------- Global State --------------------
+        let allProducts = [];
+        let currentCategory = 'all';
+        let currentSearch = '';
+
+        // DOM elements
+        const productsSection = document.getElementById('products-section');
+        const builderSection = document.getElementById('builder-section');
+        const productsGrid = document.getElementById('products-grid');
+        const searchInput = document.getElementById('search-input');
+        const categoryPills = document.querySelectorAll('.category-pill');
+        const cartSidebar = document.getElementById('cart-sidebar');
+        const cartOverlay = document.getElementById('cart-overlay');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotalSpan = document.getElementById('cart-total');
+        const cartBadgeDesktop = document.getElementById('cartBadge');
+        const cartBadgeMobile = document.getElementById('cartBadgeMobile');
+        const builderForm = document.getElementById('builder-form');
+        const buildNameInput = document.getElementById('build-name');
+        const savedBuildsDiv = document.getElementById('saved-builds-list');
+        const compatMsgDiv = document.getElementById('compat-message');
+
+        // Helper: show toast
+        function showToast(msg, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast bg-${type === 'success' ? 'green' : 'red'}-600 text-white px-4 py-2 rounded-lg shadow-lg mb-2`;
+            toast.innerText = msg;
+            document.getElementById('toast-container').appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Update cart UI from server
+        async function loadCart() {
+            try {
+                const res = await fetch('/api/cart');
+                const data = await res.json();
+                const cart = data.items || [];
+                const count = cart.length;
+                if (cartBadgeDesktop) cartBadgeDesktop.innerText = count;
+                if (cartBadgeMobile) cartBadgeMobile.innerText = count;
+                if (cartItemsContainer) {
+                    if (cart.length === 0) {
+                        cartItemsContainer.innerHTML = '<p class="text-center text-gray-400">Cart is empty</p>';
+                        cartTotalSpan.innerText = 'BDT 0';
+                    } else {
+                        let html = '';
+                        let total = 0;
+                        cart.forEach(item => {
+                            total += item.price;
+                            html += `<div class="flex justify-between items-center border-b dark:border-dark-700 pb-2">
+                                        <div><span class="font-medium">${escapeHtml(item.name)}</span><span class="text-sm text-gray-500 ml-2">BDT ${item.price}</span></div>
+                                        <button class="remove-cart-item text-red-500 hover:text-red-700" data-id="${item.id}"><i class="fas fa-trash-alt"></i></button>
+                                    </div>`;
+                        });
+                        cartItemsContainer.innerHTML = html;
+                        cartTotalSpan.innerText = `BDT ${total}`;
+                        document.querySelectorAll('.remove-cart-item').forEach(btn => {
+                            btn.addEventListener('click', async (e) => {
+                                const id = btn.getAttribute('data-id');
+                                const resDel = await fetch(`/api/cart/remove/${id}`, { method: 'DELETE' });
+                                if (resDel.ok) {
+                                    await loadCart();
+                                    showToast('Item removed', 'success');
+                                } else {
+                                    showToast('Remove failed', 'error');
+                                }
+                            });
+                        });
+                    }
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        // Render products grid
+        function renderProducts(products) {
+            if (!products.length) {
+                productsGrid.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">No products found.</div>';
+                return;
+            }
+            let html = '';
+            products.forEach(p => {
+                html += `<div class="product-card bg-white dark:bg-dark-800 rounded-xl overflow-hidden shadow-md">
+                            <div class="p-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold px-2 py-1 rounded-full bg-brand-100 dark:bg-brand-900 text-brand-800 dark:text-brand-200">${escapeHtml(p.category)}</span>
+                                    ${p.socket_type ? `<span class="text-xs text-gray-500">Socket: ${escapeHtml(p.socket_type)}</span>` : ''}
+                                </div>
+                                <h3 class="font-bold text-lg mt-2">${escapeHtml(p.name)}</h3>
+                                <div class="mt-4 flex justify-between items-center">
+                                    <span class="text-xl font-bold text-brand-600 dark:text-brand-400">BDT ${p.price}</span>
+                                    <button class="add-to-cart-btn bg-brand-500 hover:bg-brand-600 text-white px-3 py-1 rounded-lg transition" data-id="${p.id}"><i class="fas fa-cart-plus mr-1"></i>Add</button>
+                                </div>
+                            </div>
+                        </div>`;
+            });
+            productsGrid.innerHTML = html;
+            document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.getAttribute('data-id');
+                    const res = await fetch('/api/cart/add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ product_id: id })
+                    });
+                    if (res.ok) {
+                        await loadCart();
+                        showToast('Added to cart', 'success');
+                    } else {
+                        showToast('Failed to add', 'error');
+                    }
+                });
+            });
+        }
+
+        // Load products (with search + category)
+        async function loadProducts() {
+            let url = '/api/products';
+            if (currentSearch) url = `/api/search?q=${encodeURIComponent(currentSearch)}`;
+            const res = await fetch(url);
+            let products = await res.json();
+            if (currentCategory !== 'all') products = products.filter(p => p.category === currentCategory);
+            allProducts = products;
+            renderProducts(products);
+            // Populate builder dropdowns only if we are on builder tab or after products loaded
+            if (!builderSection.classList.contains('hidden')) populateBuilderDropdowns();
+        }
+
+        // Populate PC Builder dropdowns
+        async function populateBuilderDropdowns() {
+            if (!allProducts.length) {
+                const res = await fetch('/api/products');
+                allProducts = await res.json();
+            }
+            const selectMap = {
+                'cpu-select': 'CPU',
+                'mobo-select': 'Motherboard',
+                'gpu-select': 'GPU',
+                'ram-select': 'RAM',
+                'storage-select': 'Storage'
+            };
+            for (const [selectId, category] of Object.entries(selectMap)) {
+                const select = document.getElementById(selectId);
+                if (!select) continue;
+                select.innerHTML = `<option value="">Select ${category}</option>`;
+                const filtered = allProducts.filter(p => p.category === category);
+                filtered.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = `${p.name} - BDT ${p.price}`;
+                    if (p.socket_type) opt.setAttribute('data-socket', p.socket_type);
+                    select.appendChild(opt);
+                });
+            }
+            // Compatibility check
+            const cpuSel = document.getElementById('cpu-select');
+            const moboSel = document.getElementById('mobo-select');
+            if (cpuSel && moboSel) {
+                const checkCompat = () => {
+                    const cpuOpt = cpuSel.options[cpuSel.selectedIndex];
+                    const moboOpt = moboSel.options[moboSel.selectedIndex];
+                    const cpuSocket = cpuOpt?.getAttribute('data-socket');
+                    const moboSocket = moboOpt?.getAttribute('data-socket');
+                    if (cpuSocket && moboSocket && cpuSocket !== moboSocket) {
+                        compatMsgDiv.innerHTML = `<div class="text-red-600"><i class="fas fa-exclamation-triangle mr-1"></i> Socket mismatch: ${cpuSocket} vs ${moboSocket}</div>`;
+                    } else {
+                        compatMsgDiv.innerHTML = `<div class="text-green-600"><i class="fas fa-check-circle mr-1"></i> Compatible</div>`;
+                    }
+                };
+                cpuSel.addEventListener('change', checkCompat);
+                moboSel.addEventListener('change', checkCompat);
+            }
+        }
+
+        // Load saved builds
+        async function loadSavedBuilds() {
+            const res = await fetch('/api/get-builds');
+            const builds = await res.json();
+            if (!builds.length) {
+                savedBuildsDiv.innerHTML = '<p class="text-gray-400 text-center py-4">No builds saved yet.</p>';
+                return;
+            }
+            let html = '';
+            builds.forEach(b => {
+                const parts = b.parts || {};
+                html += `<div class="saved-build-card bg-gray-50 dark:bg-dark-700 rounded-lg p-3">
+                            <div class="font-bold">${escapeHtml(b.build_name)}</div>
+                            <div class="text-xs text-gray-500 mt-1">${new Date(b.created_at).toLocaleDateString()}</div>
+                            <div class="text-sm mt-1 truncate">CPU: ${getPartName(parts.cpu)} | Mobo: ${getPartName(parts.motherboard)}</div>
+                         </div>`;
+            });
+            savedBuildsDiv.innerHTML = html;
+        }
+
+        function getPartName(id) {
+            if (!id) return 'None';
+            const part = allProducts.find(p => p.id == id);
+            return part ? part.name : 'Unknown';
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        // Save build
+        async function saveBuild(e) {
+            e.preventDefault();
+            const buildName = buildNameInput.value.trim() || 'Unnamed Build';
+            const buildData = {
+                build_name: buildName,
+                cpu: document.getElementById('cpu-select').value || null,
+                motherboard: document.getElementById('mobo-select').value || null,
+                gpu: document.getElementById('gpu-select').value || null,
+                ram: document.getElementById('ram-select').value || null,
+                storage: document.getElementById('storage-select').value || null
+            };
+            const res = await fetch('/api/save-build', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(buildData)
+            });
+            if (res.ok) {
+                showToast('Build saved!', 'success');
+                loadSavedBuilds();
+                buildNameInput.value = '';
+            } else {
+                showToast('Failed to save build', 'error');
+            }
+        }
+
+        // Navigation
+        function showSection(section) {
+            if (section === 'products') {
+                productsSection.classList.remove('hidden');
+                builderSection.classList.add('hidden');
+                loadProducts();
+            } else {
+                productsSection.classList.add('hidden');
+                builderSection.classList.remove('hidden');
+                if (allProducts.length) populateBuilderDropdowns();
+                else loadProducts().then(() => populateBuilderDropdowns());
+                loadSavedBuilds();
+            }
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Cart sidebar
+        function openCart() {
+            cartSidebar.classList.remove('translate-x-full');
+            cartSidebar.classList.add('translate-x-0');
+            cartOverlay.classList.remove('hidden');
+        }
+        function closeCart() {
+            cartSidebar.classList.add('translate-x-full');
+            cartSidebar.classList.remove('translate-x-0');
+            cartOverlay.classList.add('hidden');
+        }
+
+        async function checkout() {
+            const res = await fetch('/api/checkout', { method: 'POST' });
+            if (res.ok) {
+                await loadCart();
+                showToast('Order placed! Thank you.', 'success');
+                closeCart();
+            } else {
+                showToast('Checkout failed', 'error');
+            }
+        }
+
+        // Event listeners
+        document.getElementById('nav-products')?.addEventListener('click', () => showSection('products'));
+        document.getElementById('nav-builder')?.addEventListener('click', () => showSection('builder'));
+        document.getElementById('mobile-nav-products')?.addEventListener('click', () => { showSection('products'); document.getElementById('mobile-menu').classList.add('hidden'); });
+        document.getElementById('mobile-nav-builder')?.addEventListener('click', () => { showSection('builder'); document.getElementById('mobile-menu').classList.add('hidden'); });
+        document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
+        document.getElementById('mobile-theme-toggle')?.addEventListener('click', toggleTheme);
+        document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+        document.getElementById('cart-icon-mobile')?.addEventListener('click', openCart);
+        const cartIconDesktop = document.querySelector('.hidden.md\\:flex .fa-shopping-cart')?.parentElement;
+        if (cartIconDesktop) cartIconDesktop.addEventListener('click', openCart);
+        document.getElementById('close-cart')?.addEventListener('click', closeCart);
+        cartOverlay?.addEventListener('click', closeCart);
+        document.getElementById('checkout-btn')?.addEventListener('click', checkout);
+        builderForm?.addEventListener('submit', saveBuild);
+
+        // Search & filter
+        searchInput?.addEventListener('input', (e) => {
+            currentSearch = e.target.value;
+            loadProducts();
+        });
+        categoryPills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                categoryPills.forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                currentCategory = pill.getAttribute('data-category');
+                loadProducts();
+            });
+        });
+
+        // Initial load
+        (async () => {
+            await loadCart();
+            await loadProducts();
+            showSection('products');
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') document.documentElement.classList.remove('dark');
+            else if (savedTheme === 'dark') document.documentElement.classList.add('dark');
+            else if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
+            // Add a dummy cart badge on desktop if missing (the nav doesn't have a cart icon on desktop originally – add one)
+            const desktopNav = document.querySelector('.hidden.md\\:flex');
+            if (desktopNav && !document.getElementById('cartIconDesktop')) {
+                const cartBtn = document.createElement('button');
+                cartBtn.id = 'cartIconDesktop';
+                cartBtn.className = 'relative hover:text-brand-500 transition';
+                cartBtn.innerHTML = `<i class="fas fa-shopping-cart text-xl"></i><span id="cartBadge" class="absolute -top-2 -right-3 bg-red-500 text-white text-xs rounded-full px-1.5">0</span>`;
+                cartBtn.addEventListener('click', openCart);
+                desktopNav.insertBefore(cartBtn, desktopNav.children[desktopNav.children.length - 1]);
+            }
+            // Ensure badges exist
+            if (!document.getElementById('cartBadge') && cartBadgeDesktop) cartBadgeDesktop.innerText = '0';
+        })();
+    </script>
+</body>
+</html>
